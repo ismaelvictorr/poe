@@ -1,0 +1,899 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetAssist AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f0fe',
+                            600: '#5D5CDE',
+                            900: '#2b2a6e'
+                        }
+                    }
+                }
+            }
+        }
+
+        // Check for dark mode
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+    <style>
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Markdown styling */
+        .markdown-content h1, .markdown-content h2 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .markdown-content h3 {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-top: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        .markdown-content p {
+            margin-bottom: 0.75rem;
+        }
+        .markdown-content ul, .markdown-content ol {
+            margin-left: 1.5rem;
+            margin-bottom: 0.75rem;
+            list-style-type: disc;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-6 max-w-6xl">
+        <!-- Header with Logo -->
+        <header class="flex flex-col sm:flex-row items-center justify-between mb-8">
+            <div class="flex items-center mb-4 sm:mb-0">
+                <div class="w-16 h-16 mr-4">
+                    <!-- SVG Logo with horse and dog -->
+                    <svg viewBox="0 0 200 200" class="w-full h-full">
+                        <defs>
+                            <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#5D5CDE"></stop>
+                                <stop offset="100%" stop-color="#9190f4"></stop>
+                            </linearGradient>
+                        </defs>
+                        <!-- Circle background -->
+                        <circle cx="100" cy="100" r="90" fill="white" stroke="url(#logo-gradient)" stroke-width="5"></circle>
+                        
+                        <!-- Stylized Horse -->
+                        <path d="M40,125 C40,100 50,85 70,75 C85,65 95,70 100,80 C105,90 105,100 120,105 C135,110 145,100 150,85" fill="none" stroke="url(#logo-gradient)" stroke-width="6" stroke-linecap="round"></path>
+                        
+                        <!-- Stylized Dog -->
+                        <path d="M50,140 C60,130 65,125 75,125 C85,125 90,130 95,140 C100,150 110,155 120,150 C130,145 135,135 130,125" fill="none" stroke="url(#logo-gradient)" stroke-width="6" stroke-linecap="round"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-primary-600">VetAssist AI</h1>
+                    <p class="text-gray-600 dark:text-gray-400">Assistente Veterinário Inteligente</p>
+                </div>
+            </div>
+            <nav>
+                <ul class="flex space-x-2 overflow-x-auto whitespace-nowrap pb-2">
+                    <li><button class="tab-button px-4 py-2 rounded-lg bg-primary-600 text-white" data-tab="chat">Chat</button></li>
+                    <li><button class="tab-button px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900" data-tab="xray">Raio-X</button></li>
+                    <li><button class="tab-button px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900" data-tab="ultrasound">Ultrassom</button></li>
+                    <li><button class="tab-button px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900" data-tab="patients">Pacientes</button></li>
+                    <li><button class="tab-button px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900" data-tab="appointments">Agenda</button></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <!-- Chat Tab -->
+            <div id="chat-tab" class="tab-content active">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Chat column -->
+                    <div class="md:col-span-2">
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 mb-4">
+                            <h2 class="text-xl font-semibold mb-4">Assistente Veterinário</h2>
+                            <div id="chat-messages" class="mb-4 h-96 overflow-y-auto p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                <div class="flex items-start mb-4">
+                                    <div class="w-10 h-10 rounded-full bg-primary-50 dark:bg-primary-900 flex items-center justify-center mr-3 flex-shrink-0">
+                                        <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="markdown-content bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm max-w-[85%]">
+                                        <p>Olá! Sou o VetAssist AI, seu assistente veterinário. Como posso ajudar você hoje?</p>
+                                        <p>Posso fornecer informações sobre:</p>
+                                        <ul>
+                                            <li>Diagnósticos e tratamentos</li>
+                                            <li>Orientações sobre Raio-X e Ultrassom</li>
+                                            <li>Dicas para patologias comuns</li>
+                                            <li>Manejo e cuidados com animais</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <textarea id="chat-input" rows="3" class="w-full p-3 border dark:border-gray-700 rounded-lg text-base resize-none bg-white dark:bg-gray-800" placeholder="Digite sua pergunta aqui..."></textarea>
+                                <button id="send-button" class="ml-2 p-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex-shrink-0">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Categories and history -->
+                    <div>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 mb-4">
+                            <h2 class="text-xl font-semibold mb-3">Categorias</h2>
+                            <div class="space-y-2">
+                                <button class="w-full p-2 text-left rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900">🐶 Cães</button>
+                                <button class="w-full p-2 text-left rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900">🐱 Gatos</button>
+                                <button class="w-full p-2 text-left rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900">🐴 Equinos</button>
+                                <button class="w-full p-2 text-left rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900">🐄 Ruminantes</button>
+                                <button class="w-full p-2 text-left rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900">🐦 Aves</button>
+                                <button class="w-full p-2 text-left rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900">🦎 Exóticos</button>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4">
+                            <h2 class="text-xl font-semibold mb-3">Histórico</h2>
+                            <div id="history" class="space-y-2">
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Seu histórico de perguntas aparecerá aqui.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- X-ray Tab -->
+            <div id="xray-tab" class="tab-content">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+                    <h2 class="text-2xl font-bold mb-4">Guia de Posicionamento de Raio-X</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Left column - Species selection -->
+                        <div>
+                            <h3 class="text-xl font-semibold mb-3">Selecione a Espécie</h3>
+                            <div class="space-y-2 mb-6">
+                                <button class="xray-species-btn w-full p-3 text-left rounded-lg bg-primary-600 text-white" data-species="dog">🐶 Cães</button>
+                                <button class="xray-species-btn w-full p-3 text-left rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900" data-species="cat">🐱 Gatos</button>
+                                <button class="xray-species-btn w-full p-3 text-left rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900" data-species="horse">🐴 Equinos</button>
+                                <button class="xray-species-btn w-full p-3 text-left rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900" data-species="other">Outros Animais</button>
+                            </div>
+                            
+                            <h3 class="text-xl font-semibold mb-3">Região Anatômica</h3>
+                            <div class="space-y-2 mb-6">
+                                <button class="xray-region-btn w-full p-3 text-left rounded-lg bg-primary-600 text-white" data-region="thorax">Tórax</button>
+                                <button class="xray-region-btn w-full p-3 text-left rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900" data-region="abdomen">Abdômen</button>
+                                <button class="xray-region-btn w-full p-3 text-left rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900" data-region="limbs">Membros</button>
+                                <button class="xray-region-btn w-full p-3 text-left rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900" data-region="skull">Crânio</button>
+                                <button class="xray-region-btn w-full p-3 text-left rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900" data-region="spine">Coluna</button>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-xl font-semibold mb-3">Consultar IA</h3>
+                                <textarea class="w-full p-3 border dark:border-gray-700 rounded-lg text-base resize-none bg-white dark:bg-gray-800 mb-2" rows="3" placeholder="Faça uma pergunta específica sobre posicionamento de raio-x..."></textarea>
+                                <button class="w-full p-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700" id="xray-ai-btn">Consultar VetAssist AI</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Right column - Positioning guide -->
+                        <div id="xray-guide" class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                            <h3 class="text-xl font-semibold mb-4">Guia de Posicionamento: Tórax de Cães</h3>
+                            
+                            <div class="mb-6">
+                                <h4 class="text-lg font-medium mb-2">Projeção Laterolateral (LL)</h4>
+                                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 mb-3">
+                                    <div class="aspect-video bg-gray-200 dark:bg-gray-600 rounded flex items-center justify-center mb-2">
+                                        <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="mb-2"><strong>Posicionamento:</strong> Animal em decúbito lateral direito ou esquerdo, com membros torácicos estendidos cranialmente.</p>
+                                        <p class="mb-2"><strong>Parâmetros técnicos:</strong> kV: 70-80, mAs: 5-10 (varia conforme porte)</p>
+                                        <p><strong>Dicas:</strong> Realizar no pico da inspiração. Certifique-se que o esterno e a coluna estão no mesmo plano.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-6">
+                                <h4 class="text-lg font-medium mb-2">Projeção Ventrodorsal (VD)</h4>
+                                <div class="bg-white dark:bg-gray-800 rounded-lg p-3">
+                                    <div class="aspect-video bg-gray-200 dark:bg-gray-600 rounded flex items-center justify-center mb-2">
+                                        <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="mb-2"><strong>Posicionamento:</strong> Animal em decúbito dorsal com membros torácicos estendidos cranialmente.</p>
+                                        <p class="mb-2"><strong>Parâmetros técnicos:</strong> kV: 70-80, mAs: 5-10 (varia conforme porte)</p>
+                                        <p><strong>Dicas:</strong> O esterno deve estar sobreposto à coluna vertebral.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ultrasound Tab -->
+            <div id="ultrasound-tab" class="tab-content">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+                    <h2 class="text-2xl font-bold mb-4">Guia de Ultrassonografia</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Left column - Navigation -->
+                        <div>
+                            <h3 class="text-xl font-semibold mb-3">Órgãos e Sistemas</h3>
+                            <div class="space-y-2 mb-6">
+                                <button class="us-organ-btn w-full p-3 text-left rounded-lg bg-primary-600 text-white" data-organ="liver">Fígado</button>
+                                <button class="us-organ-btn w-full p-3 text-left rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900" data-organ="kidney">Rins</button>
+                                <button class="us-organ-btn w-full p-3 text-left rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900" data-organ="bladder">Bexiga/Próstata</button>
+                                <button class="us-organ-btn w-full p-3 text-left rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900" data-organ="reproductive">Sistema Reprodutivo</button>
+                                <button class="us-organ-btn w-full p-3 text-left rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-primary-50 dark:hover:bg-primary-900" data-organ="heart">Ecocardiografia</button>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-xl font-semibold mb-3">Consultar IA</h3>
+                                <textarea class="w-full p-3 border dark:border-gray-700 rounded-lg text-base resize-none bg-white dark:bg-gray-800 mb-2" rows="3" placeholder="Faça uma pergunta específica sobre ultrassonografia..."></textarea>
+                                <button class="w-full p-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700" id="us-ai-btn">Consultar VetAssist AI</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Middle column - Normal findings -->
+                        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                            <h3 class="text-xl font-semibold mb-3">Achados Normais: Fígado</h3>
+                            
+                            <div class="mb-4">
+                                <h4 class="text-lg font-medium mb-2">Anatomia Normal</h4>
+                                <div class="aspect-video bg-gray-200 dark:bg-gray-600 rounded flex items-center justify-center mb-2">
+                                    <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                                <ul class="list-disc pl-5 space-y-1 mb-4">
+                                    <li>Ecogenicidade: Homogênea, igual ou ligeiramente maior que o córtex renal</li>
+                                    <li>Ecotextura: Fina e uniforme</li>
+                                    <li>Margens: Regulares e bem definidas</li>
+                                    <li>Vasos hepáticos: Paredes finas e hiperecogênicas</li>
+                                    <li>Vesícula biliar: Anecogênica com paredes finas e regulares</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Right column - Pathology -->
+                        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                            <h3 class="text-xl font-semibold mb-3">Patologias Comuns: Fígado</h3>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-white dark:bg-gray-800 rounded-lg p-3">
+                                    <h4 class="text-lg font-medium mb-1">Lipidose Hepática</h4>
+                                    <div class="aspect-video bg-gray-200 dark:bg-gray-600 rounded flex items-center justify-center mb-2">
+                                        <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </div>
+                                    <p class="text-sm">Aumento difuso da ecogenicidade hepática, por vezes superando a do baço. Parênquima brilhante com atenuação do feixe sonoro em profundidade.</p>
+                                </div>
+                                
+                                <div class="bg-white dark:bg-gray-800 rounded-lg p-3">
+                                    <h4 class="text-lg font-medium mb-1">Neoplasia Hepática</h4>
+                                    <div class="aspect-video bg-gray-200 dark:bg-gray-600 rounded flex items-center justify-center mb-2">
+                                        <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </div>
+                                    <p class="text-sm">Massas focais ou multifocais com ecogenicidade variável. Podem ser hipo, iso ou hiperecogênicas em relação ao parênquima normal.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patients Tab -->
+            <div id="patients-tab" class="tab-content">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold">Gestão de Pacientes</h2>
+                        <button id="add-patient-btn" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center">
+                            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Novo Paciente
+                        </button>
+                    </div>
+
+                    <!-- Search and filter -->
+                    <div class="flex flex-col md:flex-row gap-4 mb-6">
+                        <div class="relative flex-grow">
+                            <input type="text" class="w-full p-3 pl-10 border dark:border-gray-700 rounded-lg text-base bg-white dark:bg-gray-800" placeholder="Buscar pacientes...">
+                            <svg class="w-5 h-5 text-gray-500 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        <select class="p-3 border dark:border-gray-700 rounded-lg text-base bg-white dark:bg-gray-800">
+                            <option>Todos os tipos</option>
+                            <option>Cães</option>
+                            <option>Gatos</option>
+                            <option>Equinos</option>
+                            <option>Outros</option>
+                        </select>
+                    </div>
+
+                    <!-- Patient list -->
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white dark:bg-gray-800 rounded-lg overflow-hidden">
+                            <thead class="bg-gray-100 dark:bg-gray-700">
+                                <tr>
+                                    <th class="py-3 px-4 text-left">Nome</th>
+                                    <th class="py-3 px-4 text-left">Espécie</th>
+                                    <th class="py-3 px-4 text-left">Raça</th>
+                                    <th class="py-3 px-4 text-left">Idade</th>
+                                    <th class="py-3 px-4 text-left">Tutor</th>
+                                    <th class="py-3 px-4 text-left">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <tr>
+                                    <td class="py-3 px-4">Max</td>
+                                    <td class="py-3 px-4">Canino</td>
+                                    <td class="py-3 px-4">Labrador</td>
+                                    <td class="py-3 px-4">5 anos</td>
+                                    <td class="py-3 px-4">João Silva</td>
+                                    <td class="py-3 px-4">
+                                        <div class="flex space-x-2">
+                                            <button class="p-1 text-blue-600 hover:text-blue-800">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                </svg>
+                                            </button>
+                                            <button class="p-1 text-indigo-600 hover:text-indigo-800">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4">Luna</td>
+                                    <td class="py-3 px-4">Felino</td>
+                                    <td class="py-3 px-4">Siamês</td>
+                                    <td class="py-3 px-4">3 anos</td>
+                                    <td class="py-3 px-4">Maria Oliveira</td>
+                                    <td class="py-3 px-4">
+                                        <div class="flex space-x-2">
+                                            <button class="p-1 text-blue-600 hover:text-blue-800">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                </svg>
+                                            </button>
+                                            <button class="p-1 text-indigo-600 hover:text-indigo-800">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4">Thor</td>
+                                    <td class="py-3 px-4">Equino</td>
+                                    <td class="py-3 px-4">Quarto de Milha</td>
+                                    <td class="py-3 px-4">8 anos</td>
+                                    <td class="py-3 px-4">Carlos Mendes</td>
+                                    <td class="py-3 px-4">
+                                        <div class="flex space-x-2">
+                                            <button class="p-1 text-blue-600 hover:text-blue-800">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                </svg>
+                                            </button>
+                                            <button class="p-1 text-indigo-600 hover:text-indigo-800">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- New Patient Modal (hidden by default) -->
+                    <div id="new-patient-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold">Novo Paciente</h3>
+                                <button id="close-modal-btn" class="text-gray-500 hover:text-gray-700">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            
+                            <form id="new-patient-form">
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Nome do Paciente</label>
+                                        <input type="text" class="w-full p-3 border dark:border-gray-700 rounded-lg text-base bg-white dark:bg-gray-800" required="">
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium mb-1">Espécie</label>
+                                            <select class="w-full p-3 border dark:border-gray-700 rounded-lg text-base bg-white dark:bg-gray-800">
+                                                <option>Canino</option>
+                                                <option>Felino</option>
+                                                <option>Equino</option>
+                                                <option>Outro</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium mb-1">Raça</label>
+                                            <input type="text" class="w-full p-3 border dark:border-gray-700 rounded-lg text-base bg-white dark:bg-gray-800">
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Nome do Tutor</label>
+                                        <input type="text" class="w-full p-3 border dark:border-gray-700 rounded-lg text-base bg-white dark:bg-gray-800" required="">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="schedule-appointment" class="w-4 h-4 text-primary-600 rounded">
+                                            <span class="ml-2">Agendar consulta ao salvar</span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="pt-2">
+                                        <button type="button" id="save-patient-btn" class="w-full py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700">Salvar Paciente</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Appointments Tab -->
+            <div id="appointments-tab" class="tab-content">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold">Agenda de Consultas</h2>
+                        <button id="add-appointment-btn" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center">
+                            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Nova Consulta
+                        </button>
+                    </div>
+
+                    <!-- Calendar navigation -->
+                    <div class="flex justify-between items-center mb-4">
+                        <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                        </button>
+                        <h3 class="text-xl font-semibold">Maio 2023</h3>
+                        <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Daily schedule -->
+                    <div class="mb-4">
+                        <h4 class="font-semibold mb-2">Quarta-feira, 10 de Maio de 2023</h4>
+                        <div class="space-y-3">
+                            <div class="flex">
+                                <div class="w-20 text-gray-500 dark:text-gray-400 flex-shrink-0">08:00</div>
+                                <div class="flex-grow p-2 rounded-lg bg-primary-50 dark:bg-primary-900 border-l-4 border-primary-600">
+                                    <div class="font-medium">Max (Labrador) - Vacinação</div>
+                                    <div class="text-sm">Tutor: João Silva | <span class="text-primary-600">Confirmado</span></div>
+                                </div>
+                            </div>
+
+                            <div class="flex">
+                                <div class="w-20 text-gray-500 dark:text-gray-400 flex-shrink-0">09:30</div>
+                                <div class="flex-grow p-2 rounded-lg bg-gray-100 dark:bg-gray-700 border-l-4 border-gray-400">
+                                    <div class="font-medium">Luna (Siamês) - Consulta de Rotina</div>
+                                    <div class="text-sm">Tutor: Maria Oliveira | <span class="text-yellow-600">Pendente</span></div>
+                                </div>
+                            </div>
+
+                            <div class="flex">
+                                <div class="w-20 text-gray-500 dark:text-gray-400 flex-shrink-0">11:00</div>
+                                <div class="flex-grow p-2 rounded-lg bg-orange-50 dark:bg-orange-900 border-l-4 border-orange-500">
+                                    <div class="font-medium">Thor (Quarto de Milha) - Exame Claudicação</div>
+                                    <div class="text-sm">Tutor: Carlos Mendes | <span class="text-orange-600">Urgente</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabName = button.getAttribute('data-tab');
+                    
+                    // Update active tab button
+                    tabButtons.forEach(btn => {
+                        if (btn.getAttribute('data-tab') === tabName) {
+                            btn.classList.add('bg-primary-600', 'text-white');
+                            btn.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'hover:bg-primary-50', 'dark:hover:bg-primary-900');
+                        } else {
+                            btn.classList.remove('bg-primary-600', 'text-white');
+                            btn.classList.add('bg-gray-200', 'dark:bg-gray-700', 'hover:bg-primary-50', 'dark:hover:bg-primary-900');
+                        }
+                    });
+                    
+                    // Show active tab content
+                    tabContents.forEach(content => {
+                        if (content.id === `${tabName}-tab`) {
+                            content.classList.add('active');
+                        } else {
+                            content.classList.remove('active');
+                        }
+                    });
+                });
+            });
+            
+            // X-ray species and region buttons
+            const xraySpeciesButtons = document.querySelectorAll('.xray-species-btn');
+            xraySpeciesButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    xraySpeciesButtons.forEach(btn => {
+                        btn.classList.remove('bg-primary-600', 'text-white');
+                        btn.classList.add('bg-gray-100', 'dark:bg-gray-700', 'hover:bg-primary-50', 'dark:hover:bg-primary-900');
+                    });
+                    button.classList.add('bg-primary-600', 'text-white');
+                    button.classList.remove('bg-gray-100', 'dark:bg-gray-700', 'hover:bg-primary-50', 'dark:hover:bg-primary-900');
+                    
+                    // Update X-ray guide based on selection
+                    updateXrayGuide();
+                });
+            });
+            
+            const xrayRegionButtons = document.querySelectorAll('.xray-region-btn');
+            xrayRegionButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    xrayRegionButtons.forEach(btn => {
+                        btn.classList.remove('bg-primary-600', 'text-white');
+                        btn.classList.add('bg-gray-100', 'dark:bg-gray-700', 'hover:bg-primary-50', 'dark:hover:bg-primary-900');
+                    });
+                    button.classList.add('bg-primary-600', 'text-white');
+                    button.classList.remove('bg-gray-100', 'dark:bg-gray-700', 'hover:bg-primary-50', 'dark:hover:bg-primary-900');
+                    
+                    // Update X-ray guide based on selection
+                    updateXrayGuide();
+                });
+            });
+            
+            function updateXrayGuide() {
+                const selectedSpecies = document.querySelector('.xray-species-btn.bg-primary-600').getAttribute('data-species');
+                const selectedRegion = document.querySelector('.xray-region-btn.bg-primary-600').getAttribute('data-region');
+                
+                const regionText = {
+                    'thorax': 'Tórax',
+                    'abdomen': 'Abdômen',
+                    'limbs': 'Membros',
+                    'skull': 'Crânio',
+                    'spine': 'Coluna'
+                };
+                
+                const speciesText = {
+                    'dog': 'Cães',
+                    'cat': 'Gatos',
+                    'horse': 'Equinos',
+                    'other': 'Outros Animais'
+                };
+                
+                const guideTitle = document.querySelector('#xray-guide h3');
+                guideTitle.textContent = `Guia de Posicionamento: ${regionText[selectedRegion]} de ${speciesText[selectedSpecies]}`;
+            }
+            
+            // Ultrasound organ buttons
+            const usOrganButtons = document.querySelectorAll('.us-organ-btn');
+            usOrganButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    usOrganButtons.forEach(btn => {
+                        btn.classList.remove('bg-primary-600', 'text-white');
+                        btn.classList.add('bg-gray-100', 'dark:bg-gray-700', 'hover:bg-primary-50', 'dark:hover:bg-primary-900');
+                    });
+                    button.classList.add('bg-primary-600', 'text-white');
+                    button.classList.remove('bg-gray-100', 'dark:bg-gray-700', 'hover:bg-primary-50', 'dark:hover:bg-primary-900');
+                });
+            });
+            
+            // Patient modal
+            const addPatientBtn = document.getElementById('add-patient-btn');
+            const newPatientModal = document.getElementById('new-patient-modal');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            const savePatientBtn = document.getElementById('save-patient-btn');
+            
+            if (addPatientBtn && newPatientModal && closeModalBtn && savePatientBtn) {
+                addPatientBtn.addEventListener('click', () => {
+                    newPatientModal.classList.remove('hidden');
+                });
+                
+                closeModalBtn.addEventListener('click', () => {
+                    newPatientModal.classList.add('hidden');
+                });
+                
+                savePatientBtn.addEventListener('click', () => {
+                    // Get schedule appointment checkbox
+                    const scheduleAppointment = document.getElementById('schedule-appointment').checked;
+                    
+                    // Hide modal
+                    newPatientModal.classList.add('hidden');
+                    
+                    // If schedule appointment is checked, switch to appointments tab
+                    if (scheduleAppointment) {
+                        document.querySelector('.tab-button[data-tab="appointments"]').click();
+                        // Could display a success message here
+                        alert('Paciente cadastrado e consulta agendada com sucesso!');
+                    } else {
+                        alert('Paciente cadastrado com sucesso!');
+                    }
+                });
+            }
+            
+            // Chat functionality with AI integration
+            const chatInput = document.getElementById('chat-input');
+            const sendButton = document.getElementById('send-button');
+            const chatMessages = document.getElementById('chat-messages');
+            const historyContainer = document.getElementById('history');
+            
+            if (chatInput && sendButton && chatMessages) {
+                sendButton.addEventListener('click', async () => {
+                    const question = chatInput.value.trim();
+                    if (question === '') return;
+                    
+                    // Add user message to chat
+                    addMessage(question, 'user');
+                    
+                    // Add to history
+                    addToHistory(question);
+                    
+                    // Clear input
+                    chatInput.value = '';
+                    
+                    // Show loading
+                    const loadingMessageId = addLoadingMessage();
+                    
+                    try {
+                        // Simulate Gemini API response
+                        setTimeout(() => {
+                            let response;
+                            
+                            // Generate different responses based on question content
+                            if (question.toLowerCase().includes('raio') || question.toLowerCase().includes('raio-x')) {
+                                response = `## Guia Básico de Radiografia Veterinária
+
+Para um posicionamento eficaz em radiografias de pequenos animais:
+
+1. **Sedação quando necessário** - Especialmente para pacientes inquietos
+2. **Colimação correta** - Limitar a área exposta e melhorar a qualidade
+3. **Equipamentos de proteção** - Sempre utilize aventais plumbíferos e protetores
+4. **Marcadores de lateralidade** - Utilize marcadores R/L para identificação
+5. **Respiração controlada** - Radiografias torácicas devem ser feitas na inspiração`;
+                            } else if (question.toLowerCase().includes('ultrassom') || question.toLowerCase().includes('ultra')) {
+                                response = `## Dicas para Ultrassonografia Abdominal
+
+Para otimizar seus exames de ultrassom:
+
+1. **Preparo adequado**:
+   - Jejum de 8-12h para reduzir conteúdo gástrico e gases intestinais
+   - Bexiga moderadamente cheia para exames pélvicos
+
+2. **Técnica de varredura**:
+   - Inicie com uma avaliação sistemática de todos os órgãos
+   - Compare sempre órgãos pareados (rins, adrenais)`;
+                            } else {
+                                response = `Olá! Sou o VetAssist AI, seu assistente veterinário alimentado pelo Gemini API.
+
+Posso ajudar com informações sobre:
+
+- Diagnóstico e tratamento de doenças comuns
+- Interpretação de exames de imagem (raio-x e ultrassom)
+- Guias de posicionamento radiográfico
+- Protocolos terapêuticos
+- Manejo nutricional`;
+                            }
+                            
+                            // Remove loading message
+                            document.getElementById(loadingMessageId).remove();
+                            
+                            // Add AI response to chat
+                            addMessage(response, 'ai');
+                        }, 1500);
+                    } catch (error) {
+                        // Remove loading message
+                        document.getElementById(loadingMessageId).remove();
+                        
+                        // Add error message
+                        addMessage("Desculpe, ocorreu um erro ao processar sua pergunta. Por favor, tente novamente.", 'error');
+                    }
+                });
+                
+                // Send message on Enter key (but create new line with Shift+Enter)
+                chatInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendButton.click();
+                    }
+                });
+            }
+            
+            // Add AI functionality to specialty buttons
+            document.getElementById('xray-ai-btn').addEventListener('click', function() {
+                alert('Consultando IA para informações de raio-x...');
+            });
+            
+            document.getElementById('us-ai-btn').addEventListener('click', function() {
+                alert('Consultando IA para informações de ultrassom...');
+            });
+            
+            // Add appointment button
+            document.getElementById('add-appointment-btn').addEventListener('click', function() {
+                alert('Agendando nova consulta...');
+            });
+            
+            // Helper function to add messages to chat
+            function addMessage(message, type) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'flex items-start mb-4';
+                
+                let avatarIcon, messageBubbleClass;
+                
+                if (type === 'user') {
+                    avatarIcon = `<div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center mr-3 flex-shrink-0 order-2 ml-3">
+                        <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                    </div>`;
+                    messageBubbleClass = 'bg-gray-100 dark:bg-gray-700 ml-auto';
+                    messageDiv.className += ' flex-row-reverse';
+                } else if (type === 'ai') {
+                    avatarIcon = `<div class="w-10 h-10 rounded-full bg-primary-50 dark:bg-primary-900 flex items-center justify-center mr-3 flex-shrink-0">
+                        <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                        </svg>
+                    </div>`;
+                    messageBubbleClass = 'bg-white dark:bg-gray-800';
+                } else {
+                    avatarIcon = `<div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center mr-3 flex-shrink-0">
+                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>`;
+                    messageBubbleClass = 'bg-red-50 dark:bg-red-900';
+                }
+                
+                let messageContent;
+                if (type === 'ai') {
+                    // Parse markdown for AI responses
+                    messageContent = marked.parse(message);
+                } else {
+                    // Escape HTML for user messages or errors
+                    messageContent = `<p>${message}</p>`;
+                }
+                
+                messageDiv.innerHTML = `
+                    ${avatarIcon}
+                    <div class="markdown-content ${messageBubbleClass} p-3 rounded-lg shadow-sm max-w-[85%]">
+                        ${messageContent}
+                    </div>
+                `;
+                
+                chatMessages.appendChild(messageDiv);
+                
+                // Scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Helper function to add loading message
+            function addLoadingMessage() {
+                const id = 'loading-' + Date.now();
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'flex items-start mb-4';
+                loadingDiv.id = id;
+                
+                loadingDiv.innerHTML = `
+                    <div class="w-10 h-10 rounded-full bg-primary-50 dark:bg-primary-900 flex items-center justify-center mr-3 flex-shrink-0">
+                        <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                        </svg>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm max-w-[85%] flex items-center">
+                        <div class="flex space-x-1">
+                            <div class="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+                            <div class="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                            <div class="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+                        </div>
+                    </div>
+                `;
+                
+                chatMessages.appendChild(loadingDiv);
+                
+                // Scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                return id;
+            }
+            
+            // Helper function to add messages to history
+            function addToHistory(question) {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'p-2 text-sm border-b dark:border-gray-700';
+                historyItem.textContent = question.length > 40 ? question.substring(0, 40) + '...' : question;
+                
+                // Remove "Seu histórico..." message if it exists
+                const emptyHistoryMsg = historyContainer.querySelector('p');
+                if (emptyHistoryMsg && emptyHistoryMsg.textContent.includes('Seu histórico')) {
+                    emptyHistoryMsg.remove();
+                }
+                
+                // Add to history at the top
+                if (historyContainer.firstChild) {
+                    historyContainer.insertBefore(historyItem, historyContainer.firstChild);
+                } else {
+                    historyContainer.appendChild(historyItem);
+                }
+                
+                // Limit history to 5 items
+                if (historyContainer.children.length > 5) {
+                    historyContainer.removeChild(historyContainer.lastChild);
+                }
+                
+                // Make history items clickable
+                historyItem.style.cursor = 'pointer';
+                historyItem.addEventListener('click', () => {
+                    if (chatInput) {
+                        chatInput.value = question;
+                        chatInput.focus();
+                    }
+                });
+            }
+        });
+    </script>
+
+
+</body></html>
